@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 from scrapy import Spider, Request
+import os
+import csv
+import glob
+from openpyxl import Workbook
 
 
 class QuotesSpider(Spider):
@@ -25,3 +29,15 @@ class QuotesSpider(Spider):
         absolute_next_page_url = response.urljoin(next_page_url)
 
         yield Request(absolute_next_page_url)
+
+    def close(self, reason):
+        csv_file = max(glob.iglob('*.csv'), key=os.path.getctime)
+
+        wb = Workbook()
+        ws = wb.active
+
+        with open(csv_file, 'r') as f:
+            for row in csv.reader(f):
+                ws.append(row)
+
+        wb.save(csv_file.replace('.csv', '') + '.xslx')
